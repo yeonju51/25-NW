@@ -5,12 +5,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="039a9481-1885-417a-8bbb-966dbe58c9ff" name="변경" comment="feat: 초기 Spring Boot 프로젝트 설정 및 WebSocket 구현">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/config/WebSocketConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/controller/DrawingController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/controller/HomeController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/model/DrawingData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/model/UserStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/DrawingBoardApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/network/drawingboard/DrawingBoardApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/network/drawingboard/DrawingBoardApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/network/drawingboard/DrawingBoardApplication.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="HTML File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -44,8 +61,14 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "1-초기-spring-boot-프로젝트-설정-및-websocket-구현",
+    "Spring Boot.DrawingBoardApplication.executor": "Run",
+    "git-widget-placeholder": "3-이모저모",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -81,7 +104,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1749822077814</updated>
-      <workItem from="1749822079348" duration="407000" />
+      <workItem from="1749822079348" duration="1011000" />
     </task>
     <task id="LOCAL-00001" summary="feat: 초기 Spring Boot 프로젝트 설정 및 WebSocket 구현">
       <option name="closed" value="true" />
@@ -91,7 +114,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749822251504</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="feat: 초기 Spring Boot 프로젝트 설정 및 WebSocket 구현">
+      <option name="closed" value="true" />
+      <created>1749822517019</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1749822517019</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
