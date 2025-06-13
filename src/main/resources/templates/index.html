@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 협업 그림판</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .status-bar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-count {
+            font-weight: bold;
+        }
+
+        .connection-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .connected {
+            background-color: #27ae60;
+        }
+
+        .disconnected {
+            background-color: #e74c3c;
+        }
+
+        .toolbar {
+            padding: 15px 20px;
+            background-color: #ecf0f1;
+            border-bottom: 2px solid #bdc3c7;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 35px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .size-slider {
+            width: 150px;
+        }
+
+        .clear-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .canvas-container {
+            padding: 20px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        #drawingCanvas {
+            border: 3px solid #34495e;
+            border-radius: 8px;
+            cursor: crosshair;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            padding: 15px 20px;
+            background-color: #34495e;
+            color: white;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar > div {
+                margin: 5px 0;
+            }
+
+            #drawingCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎨 실시간 협업 그림판</h1>
+        <p>함께 그리고, 함께 만들어가는 디지털 캔버스</p>
+    </div>
+
+    <div class="status-bar">
+        <div class="user-count">접속 중: <span id="userCount">0</span>명</div>
+        <div id="connectionStatus" class="connection-status disconnected">연결 중...</div>
+    </div>
+
+    <div class="toolbar">
+        <div>
+            <label for="colorPicker">색상:</label>
+            <input type="color" id="colorPicker" class="color-picker" value="#000000">
+        </div>
+        <div>
+            <label for="brushSize">굵기:</label>
+            <input type="range" id="brushSize" class="size-slider" min="1" max="20" value="3">
+            <span id="brushSizeValue">3</span>px
+        </div>
+        <button id="clearBtn" class="clear-btn">전체 지우기</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <div class="footer">
+        <p>🚀 Spring Boot + WebSocket으로 구현된 실시간 협업 그림판 | 네트워크 프로그래밍 프로젝트</p>
+    </div>
+</div>
+
+<div id="notifications" class="notifications"></div>
+
+<!-- WebSocket 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    // 전역 변수
+    let stompClient = null;
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    // DOM 요소 가져오기
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('colorPicker');
+    const brushSize = document.getElementById('brushSize');
+    const brushSizeValue = document.getElementById('brushSizeValue');
+    const clearBtn = document.getElementById('clearBtn');
+    const userCountElement = document.getElementById('userCount');
+    const connectionStatus = document.getElementById('connectionStatus');
+
+    // 캔버스 설정
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // WebSocket 연결
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            updateConnectionStatus(true);
+
+            // 그리기 데이터 구독
+            stompClient.subscribe('/topic/drawing', function(message) {
+                const drawingData = JSON.parse(message.body);
+                handleRemoteDrawing(drawingData);
+            });
+
+            // 사용자 상태 구독
+            stompClient.subscribe('/topic/users', function(message) {
+                const userStatus = JSON.parse(message.body);
+                handleUserStatus(userStatus);
+            });
+
+        }, function(error) {
+            console.log('Connection error: ', error);
+            updateConnectionStatus(false);
+            // 3초 후 재연결 시도
+            setTimeout(connect, 3000);
+        });
+    }
+
+    // 연결 상태 업데이트
+    function updateConnectionStatus(connected) {
+        if (connected) {
+            connectionStatus.textContent = '연결됨';
+            connectionStatus.className = 'connection-status connected';
+        } else {
+            connectionStatus.textContent = '연결 끊김';
+            connectionStatus.className = 'connection-status disconnected';
+        }
+    }
+
+    // 원격 그리기 데이터 처리
+    function handleRemoteDrawing(data) {
+        if (data.action === 'clear') {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            showNotification(`${data.userId}님이 캔버스를 초기화했습니다.`);
+            return;
+        }
+
+        if (data.action === 'draw') {
+            ctx.strokeStyle = data.color;
+            ctx.lineWidth = data.lineWidth;
+
+            ctx.beginPath();
+            ctx.moveTo(data.prevX, data.prevY);
+            ctx.lineTo(data.x, data.y);
+            ctx.stroke();
+        }
+    }
+
+    // 사용자 상태 처리
+    function handleUserStatus(status) {
+        userCountElement.textContent = status.userCount;
+        showNotification(status.message);
+    }
+
+    // 알림 표시
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+
+        document.getElementById('notifications').appendChild(notification);
+
+        // 3초 후 알림 제거
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // 그리기 데이터 전송
+    function sendDrawingData(x, y, prevX, prevY, action = 'draw') {
+        if (stompClient && stompClient.connected) {
+            const drawingData = {
+                x: x,
+                y: y,
+                prevX: prevX,
+                prevY: prevY,
+                color: colorPicker.value,
+                lineWidth: parseInt(brushSize.value),
+                action: action
+            };
+
+            stompClient.send('/app/draw', {}, JSON.stringify(drawingData));
+        }
+    }
+
+    // 마우스 이벤트 핸들러
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
+
+        // 로컬에서 즉시 그리기
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = brushSize.value;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+
+        // 서버로 데이터 전송 (throttling 적용)
+        sendDrawingData(currentX, currentY, lastX, lastY);
+
+        lastX = currentX;
+        lastY = currentY;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mouseout', () => {
+        isDrawing = false;
+    });
+
+    // 터치 이벤트 지원 (모바일)
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const mouseEvent = new MouseEvent('mouseup', {});
+        canvas.dispatchEvent(mouseEvent);
+    });
+
+    // 브러시 크기 슬라이더 이벤트
+    brushSize.addEventListener('input', (e) => {
+        brushSizeValue.textContent = e.target.value;
+    });
+
+    // 초기화 버튼 이벤트
+    clearBtn.addEventListener('click', () => {
+        if (stompClient && stompClient.connected) {
+            stompClient.send('/app/clear', {}, {});
+        }
+    });
+
+    // 페이지 로드 시 연결
+    window.addEventListener('load', connect);
+
+    // 페이지 언로드 시 연결 해제
+    window.addEventListener('beforeunload', () => {
+        if (stompClient) {
+            stompClient.disconnect();
+        }
+    });
+</script>
+</body>
+</html>
